@@ -1,18 +1,16 @@
 {
-  "name": "next-netlify-starter",
-  "version": "0.5.0",
+  "name": "meet-clairo",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "export": "next export"
+    "start": "next start"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
     "next": "^12.1.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
-  },
-  "devDependencies": {
-    "@netlify/plugin-nextjs": "^4.5.0"
   }
 }
