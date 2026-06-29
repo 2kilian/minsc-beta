@@ -392,7 +392,7 @@ export default function TreffenSeite() {
                 <span style={{ color: 'var(--muted)', fontWeight: 400 }}>– optional</span>
               </Label>
               <textarea
-                placeholder="z.B. „Ich kann, aber erst ab 18 Uhr" oder „Nur wenn's in der Nähe ist""
+                placeholder={"z.B. „Ich kann erst ab 18 Uhr“ oder „Nur wenn’s in der Nähe ist“"}
                 value={notiz}
                 onChange={e => setNotiz(e.target.value)}
                 maxLength={200}
