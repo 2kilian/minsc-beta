@@ -4,6 +4,27 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { generateDays, formatDatumLang, besteZeiten } from '../../../lib/slots';
 
+// .ics Datei generieren und herunterladen
+function icsExport(dateStr, titel, beschreibung) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const pad = n => String(n).padStart(2, '0');
+  const ymd = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//WannKoennenWir//DE',
+    'BEGIN:VEVENT',
+    `DTSTART;VALUE=DATE:${ymd}`,
+    `DTEND;VALUE=DATE:${ymd}`,
+    `SUMMARY:${titel}`,
+    beschreibung ? `DESCRIPTION:${beschreibung}` : '',
+    'END:VEVENT', 'END:VCALENDAR',
+  ].filter(Boolean).join('\r\n');
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${titel.replace(/\s+/g, '_')}.ics`;
+  a.click();
+}
+
 const MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const WT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 function wochentag(dateStr) { return (new Date(dateStr + 'T12:00:00').getDay() + 6) % 7; }
@@ -153,11 +174,23 @@ function TopTermine({ meeting }) {
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)', marginBottom: 4 }}>
+                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)', marginBottom: 6 }}>
                   {formatDatumLang(slot)}
                 </div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--success)', fontWeight: 600, marginBottom: 2 }}>
-                  ✓ {persons.join(', ')}
+                <div style={{ marginBottom: cantCome.length > 0 ? 4 : 0 }}>
+                  {persons.map(n => {
+                    const note = meeting.notizen?.[n];
+                    return (
+                      <div key={n} style={{ fontSize: '0.82rem', color: 'var(--success)', fontWeight: 600, lineHeight: 1.5 }}>
+                        ✓ {n}
+                        {note && (
+                          <span style={{ display: 'block', paddingLeft: '1rem', fontSize: '0.76rem', color: 'var(--muted)', fontWeight: 400, fontStyle: 'italic', lineHeight: 1.4 }}>
+                            „{note}"
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
                 {cantCome.length > 0 && (
                   <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>✗ {cantCome.join(', ')}</div>
@@ -190,14 +223,32 @@ export default function ErgebnisseSeite() {
   const [meeting, setMeeting] = useState(null);
   const [fehler, setFehler] = useState('');
   const [ansicht, setAnsicht] = useState('top');
+  const [istErsteller, setIstErsteller] = useState(false);
+  const [bestaetigen, setBestaetigen] = useState('idle');
 
   useEffect(() => {
     if (!id) return;
+    setIstErsteller(localStorage.getItem(`ersteller_${id}`) === '1');
     fetch(`/api/meetings/${id}`)
       .then(r => r.json())
       .then(d => { if (d.fehler) setFehler(d.fehler); else setMeeting(d); })
       .catch(() => setFehler('Nicht gefunden.'));
   }, [id]);
+
+  const tagBestaetigen = async (tag) => {
+    setBestaetigen('saving');
+    try {
+      const res = await fetch(`/api/meetings/${id}/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tag }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.fehler);
+      setMeeting(data);
+      setBestaetigen('done');
+    } catch { setBestaetigen('idle'); }
+  };
 
   if (fehler || !meeting) return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -221,8 +272,24 @@ export default function ErgebnisseSeite() {
             </a>
           </Link>
 
+          {/* ── Bestätigter Termin ── */}
+          {meeting.bestaetigterTag && (
+            <div style={{ background: 'linear-gradient(135deg,#059669,#10b981)', borderRadius: 20, padding: '1.5rem', marginBottom: '1rem', color: '#fff' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, opacity: 0.85, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>🎉 Termin steht fest!</div>
+              <div style={{ fontSize: 'clamp(1.4rem,5vw,2rem)', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
+                {formatDatumLang(meeting.bestaetigterTag)}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button onClick={() => icsExport(meeting.bestaetigterTag, meeting.titel, meeting.beschreibung)}
+                  style={{ padding: '0.65rem 1.1rem', borderRadius: 10, background: '#fff', color: '#059669', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '0.9rem' }}>
+                  📅 Zu meinem Kalender
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ── Hero: Bester Tag ── */}
-          {top && top.count > 0 && (() => {
+          {!meeting.bestaetigterTag && top && top.count > 0 && (() => {
             const cantCome = Object.keys(meeting.antworten).filter(n => !top.persons.includes(n));
             return (
               <div style={{ background: 'var(--primary-grad)', borderRadius: 20, padding: '1.5rem', marginBottom: '1rem', color: '#fff' }}>
@@ -238,8 +305,16 @@ export default function ErgebnisseSeite() {
                     <span key={n} style={{ background: 'rgba(0,0,0,0.15)', borderRadius: 50, padding: '4px 12px', fontSize: '0.85rem', fontWeight: 600, opacity: 0.7 }}>✗ {n}</span>
                   ))}
                 </div>
-                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '0.5rem 0.875rem', fontSize: '0.85rem', fontWeight: 600, display: 'inline-block' }}>
-                  {top.count} von {meeting.teilnehmer.length} können
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '0.5rem 0.875rem', fontSize: '0.85rem', fontWeight: 600 }}>
+                    {top.count} von {meeting.teilnehmer.length} können
+                  </div>
+                  {istErsteller && (
+                    <button onClick={() => tagBestaetigen(top.slot)} disabled={bestaetigen === 'saving'}
+                      style={{ padding: '0.6rem 1.1rem', borderRadius: 10, background: '#fff', color: 'var(--primary)', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '0.875rem', opacity: bestaetigen === 'saving' ? 0.7 : 1 }}>
+                      {bestaetigen === 'saving' ? '...' : '✓ Termin bestätigen'}
+                    </button>
+                  )}
                 </div>
               </div>
             );

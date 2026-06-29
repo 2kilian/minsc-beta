@@ -148,6 +148,7 @@ export default function TreffenSeite() {
 
   const [name, setName] = useState('');
   const [ausgewaehlt, setAusgewaehlt] = useState(new Set());
+  const [notiz, setNotiz] = useState('');
   const [speichern, setSpeichern] = useState('idle');
   const [nameEingabe, setNameEingabe] = useState(false);
   const [eigenerName, setEigenerName] = useState('');
@@ -165,6 +166,7 @@ export default function TreffenSeite() {
     setName(n);
     const vorhanden = meeting?.antworten?.[n];
     setAusgewaehlt(vorhanden ? new Set(vorhanden) : new Set());
+    setNotiz(meeting?.notizen?.[n] || '');
     setSpeichern('idle');
   };
 
@@ -175,7 +177,7 @@ export default function TreffenSeite() {
       const res = await fetch(`/api/meetings/${id}/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, slots: [...ausgewaehlt] }),
+        body: JSON.stringify({ name, slots: [...ausgewaehlt], notiz }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.fehler);
@@ -316,6 +318,22 @@ export default function TreffenSeite() {
                 </div>
               </div>
               <Kalender tage={tage} ausgewaehlt={ausgewaehlt} onChange={setAusgewaehlt} />
+            </Card>
+          )}
+
+          {/* ── Notiz ── */}
+          {!abgelaufen && name && (
+            <Card style={{ marginBottom: '1rem' }}>
+              <Label style={{ marginBottom: '0.5rem' }}>Anmerkung <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span></Label>
+              <textarea
+                placeholder="z.B. „Ich kann, aber erst ab 18 Uhr" oder „Nur wenn's in der Nähe ist""
+                value={notiz}
+                onChange={e => setNotiz(e.target.value)}
+                maxLength={200}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: 10, border: '2px solid var(--border)', fontSize: '0.9rem', resize: 'none', outline: 'none', lineHeight: 1.5, minHeight: 72, fontFamily: 'inherit', color: 'var(--text)', transition: 'border-color 0.15s' }}
+                onFocus={e => e.target.style.borderColor = 'var(--primary)'}
+                onBlur={e => e.target.style.borderColor = 'var(--border)'}
+              />
             </Card>
           )}
 
