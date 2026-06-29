@@ -5,23 +5,39 @@ import { useEffect, useState } from 'react';
 import { generateDays, formatDatumLang } from '../../lib/slots';
 
 // ── Share Banner ─────────────────────────────────────────
-function ShareBanner({ id }) {
+function ShareBanner({ id, titel }) {
   const [kopiert, setKopiert] = useState(false);
   const link = typeof window !== 'undefined' ? `${window.location.origin}/treffen/${id}` : '';
+  const kannTeilen = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+  const teilen = async () => {
+    try {
+      await navigator.share({ title: titel, text: `Wann können wir? Trag ein, wann du kannst!`, url: link });
+    } catch {}
+  };
+
   const kopieren = async () => {
     try { await navigator.clipboard.writeText(link); } catch {}
     setKopiert(true);
     setTimeout(() => setKopiert(false), 2000);
   };
+
   return (
     <div style={{ background: 'var(--primary-grad)', borderRadius: 16, padding: '1.25rem', marginBottom: '1rem' }}>
-      <div style={{ color: '#fff', fontWeight: 700, marginBottom: 10, fontSize: '0.95rem' }}>🔗 Link zum Teilen</div>
+      <div style={{ color: '#fff', fontWeight: 700, marginBottom: 10, fontSize: '0.95rem' }}>Leute einladen</div>
       <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1, background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '0.65rem 0.875rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)', wordBreak: 'break-all', lineHeight: 1.4 }}>
-          {link}
-        </div>
-        <button onClick={kopieren} style={{ flexShrink: 0, padding: '0.65rem 1.1rem', borderRadius: 10, background: kopiert ? 'var(--success)' : '#fff', color: kopiert ? '#fff' : 'var(--primary)', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '0.875rem', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>
-          {kopiert ? '✓ Kopiert!' : '📋 Kopieren'}
+        {kannTeilen && (
+          <button onClick={teilen} style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: 10, background: '#fff', color: 'var(--primary)', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '1rem' }}>
+            📤 Einladen
+          </button>
+        )}
+        {!kannTeilen && (
+          <div style={{ flex: 1, background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '0.65rem 0.875rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)', wordBreak: 'break-all', lineHeight: 1.4 }}>
+            {link}
+          </div>
+        )}
+        <button onClick={kopieren} style={{ flexShrink: 0, padding: '0.75rem 1rem', borderRadius: 10, background: kopiert ? 'var(--success)' : 'rgba(255,255,255,0.2)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.4)', cursor: 'pointer', fontWeight: 700, fontSize: '0.875rem', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>
+          {kopiert ? '✓ Kopiert!' : '🔗 Link kopieren'}
         </button>
       </div>
     </div>
@@ -133,6 +149,8 @@ export default function TreffenSeite() {
   const [name, setName] = useState('');
   const [ausgewaehlt, setAusgewaehlt] = useState(new Set());
   const [speichern, setSpeichern] = useState('idle');
+  const [nameEingabe, setNameEingabe] = useState(false);
+  const [eigenerName, setEigenerName] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -218,7 +236,7 @@ export default function TreffenSeite() {
           </Card>
 
           {/* ── Share Banner ── */}
-          {istErsteller && <ShareBanner id={id} />}
+          {istErsteller && <ShareBanner id={id} titel={meeting.titel} />}
 
           {/* ── Abgelaufen ── */}
           {abgelaufen && (
@@ -231,12 +249,12 @@ export default function TreffenSeite() {
           {!abgelaufen && (
             <Card style={{ marginBottom: '1rem' }}>
               <Label>Wer bist du?</Label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: '0.875rem' }}>
                 {meeting.teilnehmer.map(n => {
                   const hat = meeting.antworten?.[n] !== undefined;
                   const aktiv = name === n;
                   return (
-                    <button key={n} onClick={() => nameWaehlen(n)} style={{
+                    <button key={n} onClick={() => { nameWaehlen(n); setNameEingabe(false); }} style={{
                       padding: '0.6rem 1.1rem', borderRadius: 50, border: '2px solid', cursor: 'pointer',
                       fontSize: '0.9rem', fontWeight: 700, transition: 'all 0.15s',
                       borderColor: aktiv ? 'var(--primary)' : 'var(--border)',
@@ -248,6 +266,37 @@ export default function TreffenSeite() {
                   );
                 })}
               </div>
+
+              {/* Selbst eintragen */}
+              {!nameEingabe ? (
+                <button onClick={() => setNameEingabe(true)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.85rem', cursor: 'pointer', padding: '2px 0', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>+</span> Mein Name fehlt
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                  <input
+                    autoFocus
+                    placeholder="Dein Name..."
+                    value={eigenerName}
+                    onChange={e => setEigenerName(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') { const n = eigenerName.trim(); if (n) { nameWaehlen(n); setNameEingabe(false); setEigenerName(''); } }
+                      if (e.key === 'Escape') { setNameEingabe(false); setEigenerName(''); }
+                    }}
+                    style={{ flex: 1, padding: '0.6rem 0.875rem', borderRadius: 10, border: '2px solid var(--primary)', fontSize: '0.9rem', outline: 'none' }}
+                  />
+                  <button
+                    onClick={() => { const n = eigenerName.trim(); if (n) { nameWaehlen(n); setNameEingabe(false); setEigenerName(''); } }}
+                    style={{ padding: '0.6rem 1rem', borderRadius: 10, background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
+                    OK
+                  </button>
+                  <button
+                    onClick={() => { setNameEingabe(false); setEigenerName(''); }}
+                    style={{ padding: '0.6rem 0.75rem', borderRadius: 10, background: '#f1f5f9', color: 'var(--muted)', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>
+                    ✕
+                  </button>
+                </div>
+              )}
             </Card>
           )}
 
