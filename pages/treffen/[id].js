@@ -12,7 +12,7 @@ function ShareBanner({ id, titel }) {
 
   const teilen = async () => {
     try {
-      await navigator.share({ title: titel, text: `Wann können wir? Trag ein, wann du kannst!`, url: link });
+      await navigator.share({ title: titel, text: 'Wann können wir? Trag ein, wann du kannst!', url: link });
     } catch {}
   };
 
@@ -23,21 +23,52 @@ function ShareBanner({ id, titel }) {
   };
 
   return (
-    <div style={{ background: 'var(--primary-grad)', borderRadius: 16, padding: '1.25rem', marginBottom: '1rem' }}>
-      <div style={{ color: '#fff', fontWeight: 700, marginBottom: 10, fontSize: '0.95rem' }}>Leute einladen</div>
+    <div style={{
+      background: 'var(--text)',
+      borderRadius: 'var(--radius-card)',
+      padding: '1.25rem',
+      marginBottom: '1rem',
+    }}>
+      <div style={{
+        color: 'rgba(255,255,255,0.45)',
+        fontSize: '0.72rem', fontWeight: 600,
+        letterSpacing: '0.08em', textTransform: 'uppercase',
+        marginBottom: 10,
+      }}>
+        Einladungslink
+      </div>
+      {!kannTeilen && (
+        <div style={{
+          background: 'rgba(255,255,255,0.07)',
+          borderRadius: 8, padding: '0.625rem 0.875rem',
+          fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)',
+          wordBreak: 'break-all', lineHeight: 1.4, marginBottom: 10,
+          fontFamily: 'monospace',
+        }}>
+          {link}
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 8 }}>
         {kannTeilen && (
-          <button onClick={teilen} style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: 10, background: '#fff', color: 'var(--primary)', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '1rem' }}>
-            📤 Einladen
+          <button onClick={teilen} style={{
+            flex: 1, padding: '0.7rem 1rem', borderRadius: 10,
+            background: '#fff', color: 'var(--text)', border: 'none',
+            cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem',
+            letterSpacing: '-0.01em',
+          }}>
+            Einladen
           </button>
         )}
-        {!kannTeilen && (
-          <div style={{ flex: 1, background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '0.65rem 0.875rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)', wordBreak: 'break-all', lineHeight: 1.4 }}>
-            {link}
-          </div>
-        )}
-        <button onClick={kopieren} style={{ flexShrink: 0, padding: '0.75rem 1rem', borderRadius: 10, background: kopiert ? 'var(--success)' : 'rgba(255,255,255,0.2)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.4)', cursor: 'pointer', fontWeight: 700, fontSize: '0.875rem', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>
-          {kopiert ? '✓ Kopiert!' : '🔗 Link kopieren'}
+        <button onClick={kopieren} style={{
+          flex: kannTeilen ? 'none' : 1,
+          padding: '0.7rem 1rem', borderRadius: 10,
+          background: kopiert ? 'rgba(52,199,89,0.18)' : 'rgba(255,255,255,0.1)',
+          color: kopiert ? '#34c759' : 'rgba(255,255,255,0.75)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
+          transition: 'all 0.2s', whiteSpace: 'nowrap', letterSpacing: '-0.01em',
+        }}>
+          {kopiert ? 'Kopiert' : 'Link kopieren'}
         </button>
       </div>
     </div>
@@ -48,7 +79,6 @@ function ShareBanner({ id, titel }) {
 const WT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
-// Wochentag Mo=0 ... So=6
 function wochentag(dateStr) {
   return (new Date(dateStr + 'T12:00:00').getDay() + 6) % 7;
 }
@@ -62,42 +92,41 @@ function Kalender({ tage, ausgewaehlt, onChange }) {
     onChange(next);
   };
 
-  // Tage nach Monat gruppieren
   const monate = {};
   for (const tag of tage) {
-    const key = tag.slice(0, 7); // "2026-07"
+    const key = tag.slice(0, 7);
     if (!monate[key]) monate[key] = [];
     monate[key].push(tag);
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
       {Object.entries(monate).map(([key]) => {
         const [year, month] = key.split('-').map(Number);
         const daysInMonth = new Date(year, month, 0).getDate();
-        const ersterTag = `${key}-01`;
-        const vorlauf = wochentag(ersterTag); // leere Zellen am Anfang
+        const vorlauf = wochentag(`${key}-01`);
 
         return (
           <div key={key}>
-            {/* Monatsname */}
-            <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)', marginBottom: '0.75rem' }}>
+            <div style={{
+              fontWeight: 600, fontSize: '0.875rem', color: 'var(--text)',
+              marginBottom: '0.875rem', letterSpacing: '-0.015em',
+            }}>
               {MONATE[month - 1]} {year}
             </div>
-
-            {/* Wochentag-Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 4 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 5 }}>
               {WT.map(w => (
-                <div key={w} style={{ textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: 'var(--muted)', padding: '2px 0' }}>{w}</div>
+                <div key={w} style={{
+                  textAlign: 'center', fontSize: '0.68rem',
+                  fontWeight: 600, color: 'var(--muted)', padding: '2px 0',
+                  letterSpacing: '0.02em',
+                }}>
+                  {w}
+                </div>
               ))}
             </div>
-
-            {/* Tage-Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-              {/* Leere Zellen */}
               {Array.from({ length: vorlauf }).map((_, i) => <div key={`e${i}`} />)}
-
-              {/* Alle Tage des Monats */}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
                 const dateStr = `${key}-${String(day).padStart(2, '0')}`;
@@ -109,20 +138,18 @@ function Kalender({ tage, ausgewaehlt, onChange }) {
                     key={dateStr}
                     onClick={() => inRange && toggle(dateStr)}
                     style={{
-                      aspectRatio: '1 / 1',
-                      borderRadius: '50%',
-                      border: 'none',
+                      aspectRatio: '1 / 1', borderRadius: '50%', border: 'none',
                       cursor: inRange ? 'pointer' : 'default',
-                      fontSize: '0.9rem',
-                      fontWeight: sel ? 800 : inRange ? 500 : 400,
+                      fontSize: '0.875rem',
+                      fontWeight: sel ? 700 : 400,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: sel ? 'var(--success)' : inRange ? 'var(--primary-light)' : 'transparent',
-                      color: sel ? '#fff' : inRange ? 'var(--primary)' : '#d1d5db',
-                      transition: 'transform 0.1s, background 0.15s',
+                      color: sel ? '#fff' : inRange ? 'var(--primary)' : '#c7c7cc',
+                      transition: 'transform 0.1s, background 0.1s',
                       WebkitTapHighlightColor: 'transparent',
                       padding: 0,
                     }}
-                    onMouseEnter={e => { if (inRange) e.currentTarget.style.transform = 'scale(1.12)'; }}
+                    onMouseEnter={e => { if (inRange) e.currentTarget.style.transform = 'scale(1.1)'; }}
                     onMouseLeave={e => { e.currentTarget.style.transform = ''; }}
                   >
                     {day}
@@ -196,18 +223,22 @@ export default function TreffenSeite() {
 
   if (fehler) return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-      <div style={{ textAlign: 'center', maxWidth: 360 }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-        <h2 style={{ marginBottom: 8 }}>Nicht gefunden</h2>
-        <p style={{ color: 'var(--muted)', marginBottom: '1.5rem' }}>{fehler}</p>
-        <Link href="/erstellen"><a style={{ display: 'inline-block', padding: '0.75rem 1.5rem', borderRadius: 12, background: 'var(--primary-grad)', color: '#fff', fontWeight: 700 }}>Neue Verabredung erstellen</a></Link>
+      <div style={{ textAlign: 'center', maxWidth: 320 }}>
+        <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '1rem' }}>Fehler</div>
+        <h2 style={{ fontWeight: 700, marginBottom: 8, letterSpacing: '-0.02em' }}>Nicht gefunden</h2>
+        <p style={{ color: 'var(--muted)', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: 1.5 }}>{fehler}</p>
+        <Link href="/erstellen">
+          <a style={{ display: 'inline-block', padding: '0.75rem 1.5rem', borderRadius: 12, background: 'var(--text)', color: '#fff', fontWeight: 600, fontSize: '0.9rem', letterSpacing: '-0.01em' }}>
+            Neue Verabredung erstellen
+          </a>
+        </Link>
       </div>
     </div>
   );
 
   if (!meeting) return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ width: 28, height: 28, border: '2px solid var(--border)', borderTopColor: 'var(--text)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
     </div>
   );
 
@@ -216,24 +247,31 @@ export default function TreffenSeite() {
       <Head><title>{meeting.titel} – Wann können wir?</title></Head>
 
       <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 96 }}>
-        <div style={{ maxWidth: 560, margin: '0 auto', padding: '1.25rem 1rem' }}>
+        <div style={{ maxWidth: 540, margin: '0 auto', padding: '1.25rem 1rem' }}>
 
           {/* ── Meeting-Header ── */}
           <Card style={{ marginBottom: '1rem' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-              {abgelaufen && <Pill color="#dc2626">Abgelaufen</Pill>}
-              {istErsteller && <Pill color="var(--success)">Du bist Organisator</Pill>}
+              {abgelaufen && <Pill color="#e05c00">Abgelaufen</Pill>}
+              {istErsteller && <Pill color="var(--success)">Organisator</Pill>}
             </div>
-            <h1 style={{ fontSize: 'clamp(1.25rem,4vw,1.75rem)', fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+            <h1 style={{
+              fontSize: 'clamp(1.25rem,4vw,1.625rem)', fontWeight: 700,
+              margin: '0 0 8px', letterSpacing: '-0.025em', lineHeight: 1.2,
+            }}>
               {meeting.titel}
             </h1>
             {meeting.beschreibung && (
-              <p style={{ color: 'var(--muted)', margin: '0 0 10px', fontSize: '0.9rem', lineHeight: 1.5 }}>{meeting.beschreibung}</p>
+              <p style={{ color: 'var(--secondary)', margin: '0 0 10px', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                {meeting.beschreibung}
+              </p>
             )}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.82rem', color: 'var(--muted)' }}>
-              <span>📆 {fmtDate(meeting.datumVon)} – {fmtDate(meeting.datumBis)}</span>
-              <span>👥 {antwortCount}/{meeting.teilnehmer.length} geantwortet</span>
-              <span>👤 {meeting.ersteller}</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.625rem', fontSize: '0.8rem', color: 'var(--muted)' }}>
+              <span>{fmtDate(meeting.datumVon)} – {fmtDate(meeting.datumBis)}</span>
+              <span style={{ color: 'var(--border)' }}>·</span>
+              <span>{antwortCount} / {meeting.teilnehmer.length} geantwortet</span>
+              <span style={{ color: 'var(--border)' }}>·</span>
+              <span>{meeting.ersteller}</span>
             </div>
           </Card>
 
@@ -242,8 +280,13 @@ export default function TreffenSeite() {
 
           {/* ── Abgelaufen ── */}
           {abgelaufen && (
-            <div style={{ background: '#fef3c7', border: '1.5px solid #fbbf24', borderRadius: 14, padding: '0.875rem 1rem', marginBottom: '1rem', fontSize: '0.875rem', color: '#92400e', fontWeight: 500 }}>
-              ⏰ Die Antwortefrist ist abgelaufen.
+            <div style={{
+              background: '#fff8f0', border: '1px solid #f5c080',
+              borderRadius: 12, padding: '0.875rem 1rem',
+              marginBottom: '1rem', fontSize: '0.875rem',
+              color: '#7a3d00', fontWeight: 500, lineHeight: 1.4,
+            }}>
+              Die Antwortefrist ist abgelaufen.
             </div>
           )}
 
@@ -257,10 +300,11 @@ export default function TreffenSeite() {
                   const aktiv = name === n;
                   return (
                     <button key={n} onClick={() => { nameWaehlen(n); setNameEingabe(false); }} style={{
-                      padding: '0.6rem 1.1rem', borderRadius: 50, border: '2px solid', cursor: 'pointer',
-                      fontSize: '0.9rem', fontWeight: 700, transition: 'all 0.15s',
-                      borderColor: aktiv ? 'var(--primary)' : 'var(--border)',
-                      background: aktiv ? 'var(--primary)' : '#fff',
+                      padding: '0.55rem 1rem', borderRadius: 50, cursor: 'pointer',
+                      fontSize: '0.875rem', fontWeight: aktiv ? 600 : 400,
+                      letterSpacing: '-0.01em', transition: 'all 0.15s',
+                      border: aktiv ? '1.5px solid var(--text)' : '1.5px solid var(--border)',
+                      background: aktiv ? 'var(--text)' : 'var(--white)',
                       color: aktiv ? '#fff' : 'var(--text)',
                     }}>
                       {n}{hat && !aktiv ? ' ✓' : ''}
@@ -269,32 +313,49 @@ export default function TreffenSeite() {
                 })}
               </div>
 
-              {/* Selbst eintragen */}
               {!nameEingabe ? (
-                <button onClick={() => setNameEingabe(true)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.85rem', cursor: 'pointer', padding: '2px 0', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>+</span> Mein Name fehlt
+                <button onClick={() => setNameEingabe(true)} style={{
+                  background: 'none', border: 'none', color: 'var(--muted)',
+                  fontSize: '0.85rem', cursor: 'pointer', padding: '2px 0',
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  letterSpacing: '-0.01em',
+                }}>
+                  <span style={{ fontSize: '1rem', lineHeight: 1 }}>+</span>
+                  Mein Name fehlt
                 </button>
               ) : (
                 <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                   <input
                     autoFocus
-                    placeholder="Dein Name..."
+                    placeholder="Dein Name …"
                     value={eigenerName}
                     onChange={e => setEigenerName(e.target.value)}
                     onKeyDown={e => {
                       if (e.key === 'Enter') { const n = eigenerName.trim(); if (n) { nameWaehlen(n); setNameEingabe(false); setEigenerName(''); } }
                       if (e.key === 'Escape') { setNameEingabe(false); setEigenerName(''); }
                     }}
-                    style={{ flex: 1, padding: '0.6rem 0.875rem', borderRadius: 10, border: '2px solid var(--primary)', fontSize: '0.9rem', outline: 'none' }}
+                    style={{
+                      flex: 1, padding: '0.6rem 0.875rem', borderRadius: 10,
+                      border: '1.5px solid var(--text)', fontSize: '0.9rem',
+                      outline: 'none', letterSpacing: '-0.01em',
+                    }}
                   />
                   <button
                     onClick={() => { const n = eigenerName.trim(); if (n) { nameWaehlen(n); setNameEingabe(false); setEigenerName(''); } }}
-                    style={{ padding: '0.6rem 1rem', borderRadius: 10, background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
+                    style={{
+                      padding: '0.6rem 1rem', borderRadius: 10,
+                      background: 'var(--text)', color: '#fff',
+                      border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem',
+                    }}>
                     OK
                   </button>
                   <button
                     onClick={() => { setNameEingabe(false); setEigenerName(''); }}
-                    style={{ padding: '0.6rem 0.75rem', borderRadius: 10, background: '#f1f5f9', color: 'var(--muted)', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>
+                    style={{
+                      padding: '0.6rem 0.75rem', borderRadius: 10,
+                      background: 'var(--bg)', color: 'var(--muted)',
+                      border: 'none', cursor: 'pointer', fontSize: '1rem',
+                    }}>
                     ✕
                   </button>
                 </div>
@@ -307,9 +368,11 @@ export default function TreffenSeite() {
             <Card style={{ marginBottom: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: 8 }}>
                 <Label style={{ marginBottom: 0 }}>
-                  An welchen Tagen kannst du?{' '}
+                  An welchen Tagen kannst du?
                   {ausgewaehlt.size > 0 && (
-                    <span style={{ color: 'var(--success)', fontWeight: 700 }}>{ausgewaehlt.size} ausgewählt</span>
+                    <span style={{ color: 'var(--success)', fontWeight: 600, marginLeft: 8 }}>
+                      {ausgewaehlt.size} ausgewählt
+                    </span>
                   )}
                 </Label>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -324,14 +387,23 @@ export default function TreffenSeite() {
           {/* ── Notiz ── */}
           {!abgelaufen && name && (
             <Card style={{ marginBottom: '1rem' }}>
-              <Label style={{ marginBottom: '0.5rem' }}>Anmerkung <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span></Label>
+              <Label style={{ marginBottom: '0.5rem' }}>
+                Anmerkung{' '}
+                <span style={{ color: 'var(--muted)', fontWeight: 400 }}>– optional</span>
+              </Label>
               <textarea
                 placeholder="z.B. „Ich kann, aber erst ab 18 Uhr" oder „Nur wenn's in der Nähe ist""
                 value={notiz}
                 onChange={e => setNotiz(e.target.value)}
                 maxLength={200}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: 10, border: '2px solid var(--border)', fontSize: '0.9rem', resize: 'none', outline: 'none', lineHeight: 1.5, minHeight: 72, fontFamily: 'inherit', color: 'var(--text)', transition: 'border-color 0.15s' }}
-                onFocus={e => e.target.style.borderColor = 'var(--primary)'}
+                style={{
+                  width: '100%', padding: '0.75rem', borderRadius: 10,
+                  border: '1.5px solid var(--border)', fontSize: '0.9rem',
+                  resize: 'none', outline: 'none', lineHeight: 1.5,
+                  minHeight: 72, fontFamily: 'inherit', color: 'var(--text)',
+                  transition: 'border-color 0.15s', letterSpacing: '-0.01em',
+                }}
+                onFocus={e => e.target.style.borderColor = 'var(--text)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border)'}
               />
             </Card>
@@ -339,13 +411,19 @@ export default function TreffenSeite() {
 
           {/* ── Wer hat geantwortet ── */}
           <Card style={{ marginBottom: '1rem' }}>
-            <Label>{antwortCount}/{meeting.teilnehmer.length} haben geantwortet</Label>
+            <Label>{antwortCount} / {meeting.teilnehmer.length} haben geantwortet</Label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {meeting.teilnehmer.map(n => {
                 const hat = meeting.antworten?.[n] !== undefined;
                 return (
-                  <div key={n} style={{ padding: '5px 14px', borderRadius: 50, fontSize: '0.875rem', fontWeight: 600, background: hat ? 'var(--success-light)' : '#f1f5f9', color: hat ? '#065f46' : 'var(--muted)' }}>
-                    {hat ? '✓' : '○'} {n}
+                  <div key={n} style={{
+                    padding: '5px 13px', borderRadius: 50, fontSize: '0.85rem',
+                    fontWeight: hat ? 500 : 400, letterSpacing: '-0.01em',
+                    background: hat ? 'var(--success-light)' : 'var(--bg)',
+                    color: hat ? '#1a7a40' : 'var(--muted)',
+                    border: hat ? '1px solid #b8f0c8' : '1px solid var(--border)',
+                  }}>
+                    {hat ? '✓ ' : ''}{n}
                   </div>
                 );
               })}
@@ -354,11 +432,28 @@ export default function TreffenSeite() {
 
           {/* ── Ergebnisse-Link ── */}
           <Link href={`/treffen/${id}/ergebnisse`}>
-            <a style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: '1rem', boxShadow: 'var(--shadow-card)', color: 'var(--primary)', fontWeight: 700, fontSize: '1rem', border: '2px solid var(--primary-light)' }}>
-              🎯 Beste Termine anzeigen
-              {antwortCount > 0 && <span style={{ background: 'var(--primary)', color: '#fff', borderRadius: 50, padding: '1px 8px', fontSize: '0.78rem' }}>{antwortCount}</span>}
+            <a style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: 'var(--white)', borderRadius: 'var(--radius-card)',
+              padding: '1rem 1.25rem', boxShadow: 'var(--shadow-card)',
+              color: 'var(--text)', fontWeight: 600, fontSize: '0.95rem',
+              border: '1px solid var(--border)', letterSpacing: '-0.015em',
+            }}>
+              <span>Beste Termine anzeigen</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {antwortCount > 0 && (
+                  <span style={{
+                    background: 'var(--text)', color: '#fff',
+                    borderRadius: 50, padding: '1px 8px', fontSize: '0.78rem', fontWeight: 600,
+                  }}>
+                    {antwortCount}
+                  </span>
+                )}
+                <span style={{ color: 'var(--muted)' }}>→</span>
+              </div>
             </a>
           </Link>
+
         </div>
       </div>
 
@@ -366,26 +461,38 @@ export default function TreffenSeite() {
       {name && !abgelaufen && (
         <div style={{
           position: 'fixed', bottom: 0, left: 0, right: 0,
-          background: '#fff', borderTop: '1px solid var(--border)',
+          background: 'rgba(255,255,255,0.92)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderTop: '1px solid var(--border)',
           padding: '0.875rem 1rem',
           paddingBottom: 'calc(0.875rem + env(safe-area-inset-bottom))',
-          display: 'flex', alignItems: 'center', gap: 12,
-          boxShadow: '0 -4px 20px rgba(0,0,0,0.08)', zIndex: 100,
+          display: 'flex', alignItems: 'center', gap: 12, zIndex: 100,
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
-              {ausgewaehlt.size === 0 ? 'Keine Tage ausgewählt' : `${ausgewaehlt.size} Tag${ausgewaehlt.size !== 1 ? 'e' : ''} ausgewählt`}
+            <div style={{
+              fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              letterSpacing: '-0.015em',
+            }}>
+              {name}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: 1 }}>
+              {ausgewaehlt.size === 0 ? 'Keine Tage ausgewählt' : `${ausgewaehlt.size} Tag${ausgewaehlt.size !== 1 ? 'e' : ''} gewählt`}
             </div>
           </div>
           <button onClick={handleSpeichern} disabled={speichern === 'saving'}
             style={{
-              padding: '0.75rem 1.5rem', borderRadius: 12, border: 'none', cursor: 'pointer',
-              fontWeight: 800, fontSize: '0.95rem', transition: 'all 0.2s', flexShrink: 0,
-              background: speichern === 'saved' ? 'var(--success)' : speichern === 'error' ? '#ef4444' : 'var(--primary-grad)',
-              color: '#fff', opacity: speichern === 'saving' ? 0.7 : 1,
+              padding: '0.7rem 1.5rem', borderRadius: 12, border: 'none',
+              cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem',
+              transition: 'all 0.2s', flexShrink: 0, letterSpacing: '-0.01em',
+              background: speichern === 'saved' ? 'var(--success)' : speichern === 'error' ? '#e03030' : 'var(--text)',
+              color: '#fff', opacity: speichern === 'saving' ? 0.6 : 1,
             }}>
-            {speichern === 'saving' ? 'Speichert...' : speichern === 'saved' ? '✓ Gespeichert!' : speichern === 'error' ? 'Fehler – nochmal?' : 'Speichern →'}
+            {speichern === 'saving' ? 'Speichert …'
+              : speichern === 'saved' ? 'Gespeichert'
+              : speichern === 'error' ? 'Fehler – nochmal?'
+              : 'Speichern'}
           </button>
         </div>
       )}
@@ -393,22 +500,51 @@ export default function TreffenSeite() {
   );
 }
 
-// ── Hilfsfunktionen & Mini-Komponenten ───────────────────
+// ── Mini-Komponenten ──────────────────────────────────────
 function fmtDate(str) {
   return new Date(str + 'T12:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
 }
 function Card({ children, style }) {
-  return <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: '1.25rem', boxShadow: 'var(--shadow-card)', ...style }}>{children}</div>;
+  return (
+    <div style={{
+      background: 'var(--white)', borderRadius: 'var(--radius-card)',
+      padding: '1.25rem', border: '1px solid var(--border)', ...style,
+    }}>
+      {children}
+    </div>
+  );
 }
 function Label({ children, style }) {
-  return <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)', marginBottom: '0.75rem', ...style }}>{children}</div>;
+  return (
+    <div style={{
+      fontWeight: 600, fontSize: '0.875rem', color: 'var(--text)',
+      marginBottom: '0.75rem', letterSpacing: '-0.015em', ...style,
+    }}>
+      {children}
+    </div>
+  );
 }
 function Pill({ children, color }) {
-  return <span style={{ display: 'inline-block', background: color + '18', color, borderRadius: 50, padding: '3px 10px', fontSize: '0.75rem', fontWeight: 700 }}>{children}</span>;
+  return (
+    <span style={{
+      display: 'inline-block', borderRadius: 50,
+      padding: '3px 10px', fontSize: '0.72rem', fontWeight: 600,
+      background: color + '15', color,
+      border: `1px solid ${color}30`,
+      letterSpacing: '-0.01em',
+    }}>
+      {children}
+    </span>
+  );
 }
 function SmallBtn({ children, onClick }) {
   return (
-    <button onClick={onClick} style={{ padding: '4px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: '#fff', color: 'var(--text)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>
+    <button onClick={onClick} style={{
+      padding: '4px 12px', borderRadius: 8, border: '1px solid var(--border)',
+      background: 'var(--bg)', color: 'var(--secondary)',
+      fontSize: '0.78rem', fontWeight: 500, cursor: 'pointer',
+      letterSpacing: '-0.01em',
+    }}>
       {children}
     </button>
   );

@@ -2,9 +2,9 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 const SCHRITTE = [
-  { icon: '✏️', label: 'Erstellen', text: 'Titel, Zeitraum und Teilnehmer angeben' },
-  { icon: '🔗', label: 'Teilen', text: 'Link versenden – keine Anmeldung nötig' },
-  { icon: '🎯', label: 'Besten Tag finden', text: 'Automatisch der Termin, an dem die meisten können' },
+  { nr: '01', label: 'Erstellen', text: 'Titel, Zeitraum und Teilnehmer festlegen' },
+  { nr: '02', label: 'Teilen', text: 'Link verschicken – keine Anmeldung nötig' },
+  { nr: '03', label: 'Treffen', text: 'Der beste Tag für alle automatisch ermittelt' },
 ];
 
 export default function Home() {
@@ -16,37 +16,93 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div style={{ minHeight: '100vh', background: 'var(--primary-grad)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.25rem' }}>
-        <div style={{ width: '100%', maxWidth: 480, textAlign: 'center' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: 'var(--white)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '3rem 1.75rem',
+      }}>
+        <div style={{ maxWidth: 420, margin: '0 auto', width: '100%' }}>
 
-          <div style={{ fontSize: 56, marginBottom: '1rem', lineHeight: 1 }}>📅</div>
-
-          <h1 style={{ fontSize: 'clamp(2rem,6vw,3rem)', fontWeight: 900, color: '#fff', margin: '0 0 0.75rem', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
-            Wann können wir?
-          </h1>
-          <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', margin: '0 0 2.5rem', lineHeight: 1.6 }}>
-            Finde den besten Termin für alle – schnell, einfach, ohne Anmeldung.
+          <p style={{
+            fontSize: '0.7rem',
+            fontWeight: 600,
+            color: 'var(--muted)',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            margin: '0 0 1.75rem',
+          }}>
+            Wann können wir
           </p>
+
+          <h1 style={{
+            fontSize: 'clamp(2.25rem, 8vw, 3.5rem)',
+            fontWeight: 700,
+            color: 'var(--text)',
+            margin: '0 0 2.25rem',
+            lineHeight: 1.06,
+            letterSpacing: '-0.028em',
+          }}>
+            Gemeinsam<br />den besten<br />Termin finden.
+          </h1>
 
           <Link href="/erstellen">
             <a style={{
-              display: 'block', background: '#fff', color: 'var(--primary)',
-              fontWeight: 800, fontSize: '1.1rem', padding: '1rem 2rem',
-              borderRadius: 50, boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
-              transition: 'transform 0.15s, box-shadow 0.15s',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              background: 'var(--text)',
+              color: '#fff',
+              fontWeight: 600,
+              fontSize: '0.975rem',
+              padding: '0.875rem 1.5rem',
+              borderRadius: 12,
+              letterSpacing: '-0.015em',
+              transition: 'opacity 0.15s',
             }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.25)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.18)'; }}>
-              Neue Verabredung erstellen →
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.82'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              Verabredung erstellen
+              <ArrowRight />
             </a>
           </Link>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.875rem', marginTop: '3rem' }}>
-            {SCHRITTE.map(({ icon, label, text }) => (
-              <div key={label} style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', borderRadius: 16, padding: '1.25rem 0.75rem' }}>
-                <div style={{ fontSize: 28, marginBottom: 6 }}>{icon}</div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', marginBottom: 4 }}>{label}</div>
-                <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.78rem', lineHeight: 1.4 }}>{text}</div>
+          <div style={{
+            marginTop: '3.5rem',
+            paddingTop: '2rem',
+            borderTop: '1px solid var(--border)',
+          }}>
+            {SCHRITTE.map(({ nr, label, text }, i) => (
+              <div key={nr} style={{
+                display: 'flex',
+                gap: '1.25rem',
+                alignItems: 'flex-start',
+                paddingBottom: i < SCHRITTE.length - 1 ? '1.25rem' : 0,
+                borderBottom: i < SCHRITTE.length - 1 ? '1px solid var(--border)' : 'none',
+                marginBottom: i < SCHRITTE.length - 1 ? '1.25rem' : 0,
+              }}>
+                <div style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  color: 'var(--muted)',
+                  letterSpacing: '0.06em',
+                  paddingTop: 2,
+                  flexShrink: 0,
+                  width: 20,
+                }}>
+                  {nr}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)', marginBottom: 3, letterSpacing: '-0.01em' }}>
+                    {label}
+                  </div>
+                  <div style={{ fontSize: '0.825rem', color: 'var(--muted)', lineHeight: 1.5 }}>
+                    {text}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -54,5 +110,13 @@ export default function Home() {
         </div>
       </div>
     </>
+  );
+}
+
+function ArrowRight() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <path d="M2.5 7.5h10M8.5 3.5l4 4-4 4" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
