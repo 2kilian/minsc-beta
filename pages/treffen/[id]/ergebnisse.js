@@ -206,9 +206,14 @@ function TopTermine({ meeting }) {
                 <div style={{ marginBottom: cantCome.length > 0 ? 4 : 0 }}>
                   {persons.map(n => {
                     const note = notizen?.[n];
+                    const slotStr = meeting.antworten?.[n]?.find(s => s.startsWith(slot));
+                    const zeitAb = slotStr && slotStr.length > 10 ? slotStr.slice(11, 16) : null;
                     return (
                       <div key={n} style={{ fontSize: '0.82rem', color: '#1a7a40', fontWeight: 500, lineHeight: 1.5, letterSpacing: '-0.01em' }}>
                         ✓ {n}
+                        {zeitAb && (
+                          <span style={{ fontWeight: 400, color: 'var(--secondary)', fontSize: '0.78rem' }}> ab {zeitAb} Uhr</span>
+                        )}
                         {note && (
                           <span style={{
                             display: 'block', paddingLeft: '1rem',

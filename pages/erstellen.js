@@ -191,32 +191,69 @@ export default function Erstellen() {
 
             {schritt === 2 && (
               <>
-                <Field label="Frühestens ab">
-                  <input type="date" style={inputStyle} {...focusHandlers}
-                    min={heute}
-                    value={form.datumVon}
-                    onChange={e => {
-                      set('datumVon', e.target.value);
-                      if (!form.datumBis || form.datumBis < e.target.value) set('datumBis', e.target.value);
-                    }}
-                  />
-                </Field>
-                <Field label="Spätestens bis" hint="Innerhalb dieses Zeitraums wählen alle ihre Verfügbarkeit">
-                  <input type="date" style={inputStyle} {...focusHandlers}
-                    min={form.datumVon || heute}
-                    value={form.datumBis}
-                    onChange={e => set('datumBis', e.target.value)}
-                  />
-                </Field>
-                {form.datumVon && form.datumBis && (
+                <p style={{ color: 'var(--muted)', fontSize: '0.875rem', margin: '0 0 1.25rem', lineHeight: 1.5 }}>
+                  In welchem Zeitraum soll der Termin stattfinden?
+                </p>
+
+                {/* Datum-Range-Karte */}
+                <div style={{ marginBottom: '1rem' }}>
                   <div style={{
-                    background: 'var(--bg)', borderRadius: 8,
-                    padding: '0.75rem 1rem', fontSize: '0.85rem',
-                    color: 'var(--secondary)', border: '1px solid var(--border)',
+                    display: 'grid', gridTemplateColumns: '1fr auto 1fr',
+                    borderRadius: 14, border: '1.5px solid var(--border)',
+                    overflow: 'hidden', background: 'var(--white)',
                   }}>
-                    {Math.round((new Date(form.datumBis) - new Date(form.datumVon)) / 86400000) + 1} Tage im Auswahlbereich
+                    {/* Ab */}
+                    <label style={{ display: 'block', padding: '1rem', cursor: 'pointer', position: 'relative', minHeight: 72 }}>
+                      <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                        Ab
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: '0.975rem', color: form.datumVon ? 'var(--text)' : 'var(--muted)', letterSpacing: '-0.015em' }}>
+                        {form.datumVon ? fmtDateLang(form.datumVon) : 'Datum'}
+                      </div>
+                      <input type="date"
+                        min={heute}
+                        value={form.datumVon}
+                        onChange={e => {
+                          set('datumVon', e.target.value);
+                          if (!form.datumBis || form.datumBis < e.target.value) set('datumBis', e.target.value);
+                        }}
+                        style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                      />
+                    </label>
+
+                    {/* Pfeil */}
+                    <div style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+                      padding: '0 0.75rem', color: 'var(--muted)', fontSize: '1rem',
+                    }}>
+                      →
+                    </div>
+
+                    {/* Bis */}
+                    <label style={{ display: 'block', padding: '1rem', cursor: 'pointer', position: 'relative', minHeight: 72 }}>
+                      <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                        Bis
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: '0.975rem', color: form.datumBis ? 'var(--text)' : 'var(--muted)', letterSpacing: '-0.015em' }}>
+                        {form.datumBis ? fmtDateLang(form.datumBis) : 'Datum'}
+                      </div>
+                      <input type="date"
+                        min={form.datumVon || heute}
+                        value={form.datumBis}
+                        onChange={e => set('datumBis', e.target.value)}
+                        style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                      />
+                    </label>
                   </div>
-                )}
+
+                  {/* Hinweis */}
+                  <div style={{ textAlign: 'center', marginTop: 10, fontSize: '0.82rem', color: 'var(--secondary)' }}>
+                    {form.datumVon && form.datumBis
+                      ? `${Math.round((new Date(form.datumBis) - new Date(form.datumVon)) / 86400000) + 1} Tage im Auswahlbereich`
+                      : 'Tippe auf Ab oder Bis, um ein Datum zu wählen'}
+                  </div>
+                </div>
               </>
             )}
 
@@ -306,6 +343,10 @@ export default function Erstellen() {
       </div>
     </>
   );
+}
+
+function fmtDateLang(str) {
+  return new Date(str + 'T12:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'long' });
 }
 
 function Chip({ label, isYou, onRemove }) {

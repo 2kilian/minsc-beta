@@ -85,11 +85,46 @@ function wochentag(dateStr) {
 
 function Kalender({ tage, ausgewaehlt, onChange }) {
   const tagSet = new Set(tage);
+  const [zeitSheet, setZeitSheet] = useState(null);
+  const [zeitWert, setZeitWert] = useState('');
 
-  const toggle = (tag) => {
-    const next = new Set(ausgewaehlt);
-    if (next.has(tag)) next.delete(tag); else next.add(tag);
+  const handleTap = (dateStr) => {
+    if (!tagSet.has(dateStr)) return;
+    const hat = ausgewaehlt.has(dateStr);
+    if (!hat) {
+      // Nicht ausgewählt → Kann (ganztags)
+      const next = new Map(ausgewaehlt);
+      next.set(dateStr, null);
+      onChange(next);
+    } else {
+      const zeit = ausgewaehlt.get(dateStr);
+      if (zeit === null) {
+        // Ganztags → Uhrzeit-Sheet öffnen
+        setZeitSheet(dateStr);
+        setZeitWert('');
+      } else {
+        // Hat Uhrzeit → abwählen
+        const next = new Map(ausgewaehlt);
+        next.delete(dateStr);
+        onChange(next);
+      }
+    }
+  };
+
+  const zeitSpeichern = () => {
+    const next = new Map(ausgewaehlt);
+    next.set(zeitSheet, zeitWert || null);
     onChange(next);
+    setZeitSheet(null);
+    setZeitWert('');
+  };
+
+  const tagAbwaehlen = () => {
+    const next = new Map(ausgewaehlt);
+    next.delete(zeitSheet);
+    onChange(next);
+    setZeitSheet(null);
+    setZeitWert('');
   };
 
   const monate = {};
@@ -100,66 +135,124 @@ function Kalender({ tage, ausgewaehlt, onChange }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-      {Object.entries(monate).map(([key]) => {
-        const [year, month] = key.split('-').map(Number);
-        const daysInMonth = new Date(year, month, 0).getDate();
-        const vorlauf = wochentag(`${key}-01`);
+    <div>
+      <div style={{ fontSize: '0.76rem', color: 'var(--muted)', marginBottom: '1rem', lineHeight: 1.5 }}>
+        1× tippen = kann · 2× tippen = ab wann? · 3× tippen = abwählen
+      </div>
 
-        return (
-          <div key={key}>
-            <div style={{
-              fontWeight: 600, fontSize: '0.875rem', color: 'var(--text)',
-              marginBottom: '0.875rem', letterSpacing: '-0.015em',
-            }}>
-              {MONATE[month - 1]} {year}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 5 }}>
-              {WT.map(w => (
-                <div key={w} style={{
-                  textAlign: 'center', fontSize: '0.68rem',
-                  fontWeight: 600, color: 'var(--muted)', padding: '2px 0',
-                  letterSpacing: '0.02em',
-                }}>
-                  {w}
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-              {Array.from({ length: vorlauf }).map((_, i) => <div key={`e${i}`} />)}
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const day = i + 1;
-                const dateStr = `${key}-${String(day).padStart(2, '0')}`;
-                const inRange = tagSet.has(dateStr);
-                const sel = ausgewaehlt.has(dateStr);
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+        {Object.entries(monate).map(([key]) => {
+          const [year, month] = key.split('-').map(Number);
+          const daysInMonth = new Date(year, month, 0).getDate();
+          const vorlauf = wochentag(`${key}-01`);
 
-                return (
-                  <button
-                    key={dateStr}
-                    onClick={() => inRange && toggle(dateStr)}
-                    style={{
-                      aspectRatio: '1 / 1', borderRadius: '50%', border: 'none',
-                      cursor: inRange ? 'pointer' : 'default',
-                      fontSize: '0.875rem',
-                      fontWeight: sel ? 700 : 400,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: sel ? 'var(--success)' : inRange ? 'var(--primary-light)' : 'transparent',
-                      color: sel ? '#fff' : inRange ? 'var(--primary)' : '#c7c7cc',
-                      transition: 'transform 0.1s, background 0.1s',
-                      WebkitTapHighlightColor: 'transparent',
-                      padding: 0,
-                    }}
-                    onMouseEnter={e => { if (inRange) e.currentTarget.style.transform = 'scale(1.1)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = ''; }}
-                  >
-                    {day}
-                  </button>
-                );
-              })}
+          return (
+            <div key={key}>
+              <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text)', marginBottom: '0.875rem', letterSpacing: '-0.015em' }}>
+                {MONATE[month - 1]} {year}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 5 }}>
+                {WT.map(w => (
+                  <div key={w} style={{ textAlign: 'center', fontSize: '0.68rem', fontWeight: 600, color: 'var(--muted)', padding: '2px 0', letterSpacing: '0.02em' }}>{w}</div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+                {Array.from({ length: vorlauf }).map((_, i) => <div key={`e${i}`} />)}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const day = i + 1;
+                  const dateStr = `${key}-${String(day).padStart(2, '0')}`;
+                  const inRange = tagSet.has(dateStr);
+                  const selected = ausgewaehlt.has(dateStr);
+                  const zeit = ausgewaehlt.get(dateStr);
+                  const hasTime = selected && zeit !== null && zeit !== undefined;
+
+                  return (
+                    <button
+                      key={dateStr}
+                      onClick={() => handleTap(dateStr)}
+                      style={{
+                        aspectRatio: '1 / 1', borderRadius: '50%', border: 'none',
+                        cursor: inRange ? 'pointer' : 'default',
+                        fontSize: '0.82rem', fontWeight: selected ? 700 : 400,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexDirection: 'column',
+                        background: hasTime ? '#1a7a40' : selected ? 'var(--success)' : inRange ? 'var(--primary-light)' : 'transparent',
+                        color: selected ? '#fff' : inRange ? 'var(--primary)' : '#c7c7cc',
+                        transition: 'transform 0.1s, background 0.1s',
+                        WebkitTapHighlightColor: 'transparent',
+                        padding: 0, lineHeight: 1,
+                        outline: zeitSheet === dateStr ? '2px solid var(--primary)' : 'none',
+                        outlineOffset: 2,
+                      }}
+                      onMouseEnter={e => { if (inRange) e.currentTarget.style.transform = 'scale(1.1)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = ''; }}
+                    >
+                      {day}
+                      {hasTime && (
+                        <span style={{ fontSize: '0.5rem', opacity: 0.85, marginTop: 1 }}>
+                          {zeit.slice(0, 5)}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Uhrzeit Bottom Sheet */}
+      {zeitSheet && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          <div onClick={() => { setZeitSheet(null); setZeitWert(''); }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
+          <div style={{
+            position: 'relative', zIndex: 1, background: '#fff',
+            borderRadius: '20px 20px 0 0', padding: '0.5rem 1.25rem 1.5rem',
+            paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
+            boxShadow: '0 -4px 40px rgba(0,0,0,0.12)',
+          }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0.75rem auto 1.25rem' }} />
+            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 4 }}>
+              {formatDatumLang(zeitSheet)}
+            </div>
+            <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--text)', letterSpacing: '-0.02em', marginBottom: '1.25rem' }}>
+              Ab wann kannst du?
+            </div>
+            <input type="time" value={zeitWert} onChange={e => setZeitWert(e.target.value)} autoFocus
+              style={{
+                width: '100%', padding: '0.875rem 1rem',
+                fontSize: '1.5rem', fontWeight: 600, textAlign: 'center',
+                borderRadius: 12, border: '1.5px solid var(--border)',
+                outline: 'none', letterSpacing: '0.05em', color: 'var(--text)', marginBottom: '0.625rem',
+              }}
+              onFocus={e => e.target.style.borderColor = 'var(--text)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border)'}
+            />
+            <p style={{ textAlign: 'center', fontSize: '0.76rem', color: 'var(--muted)', margin: '0 0 1.25rem' }}>
+              Ohne Uhrzeit = ganztags
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={tagAbwaehlen} style={{
+                flex: 1, padding: '0.875rem', borderRadius: 12,
+                border: '1.5px solid var(--border)', background: '#fff',
+                color: '#e03030', fontWeight: 600, fontSize: '0.875rem',
+                cursor: 'pointer', letterSpacing: '-0.01em',
+              }}>
+                Abwählen
+              </button>
+              <button onClick={zeitSpeichern} style={{
+                flex: 2, padding: '0.875rem', borderRadius: 12,
+                background: 'var(--text)', color: '#fff', border: 'none',
+                fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', letterSpacing: '-0.01em',
+              }}>
+                {zeitWert ? `Ab ${zeitWert} Uhr` : 'Ganztags'}
+              </button>
             </div>
           </div>
-        );
-      })}
+        </div>
+      )}
     </div>
   );
 }
@@ -174,7 +267,7 @@ export default function TreffenSeite() {
   const [istErsteller, setIstErsteller] = useState(false);
 
   const [name, setName] = useState('');
-  const [ausgewaehlt, setAusgewaehlt] = useState(new Set());
+  const [ausgewaehlt, setAusgewaehlt] = useState(new Map()); // Map<dateStr, null|"18:00">
   const [notiz, setNotiz] = useState('');
   const [speichern, setSpeichern] = useState('idle');
   const [nameEingabe, setNameEingabe] = useState(false);
@@ -192,7 +285,17 @@ export default function TreffenSeite() {
   const nameWaehlen = (n) => {
     setName(n);
     const vorhanden = meeting?.antworten?.[n];
-    setAusgewaehlt(vorhanden ? new Set(vorhanden) : new Set());
+    if (vorhanden) {
+      const map = new Map();
+      vorhanden.forEach(slot => {
+        const date = slot.slice(0, 10);
+        const zeit = slot.length > 10 ? slot.slice(11, 16) : null;
+        map.set(date, zeit);
+      });
+      setAusgewaehlt(map);
+    } else {
+      setAusgewaehlt(new Map());
+    }
     setNotiz(meeting?.notizen?.[n] || '');
     setSpeichern('idle');
   };
@@ -204,7 +307,11 @@ export default function TreffenSeite() {
       const res = await fetch(`/api/meetings/${id}/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, slots: [...ausgewaehlt], notiz }),
+        body: JSON.stringify({
+          name,
+          slots: Array.from(ausgewaehlt.entries()).map(([date, zeit]) => zeit ? `${date}T${zeit}` : date),
+          notiz,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.fehler);
@@ -376,8 +483,8 @@ export default function TreffenSeite() {
                   )}
                 </Label>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <SmallBtn onClick={() => setAusgewaehlt(new Set(tage))}>Alle</SmallBtn>
-                  <SmallBtn onClick={() => setAusgewaehlt(new Set())}>Keine</SmallBtn>
+                  <SmallBtn onClick={() => setAusgewaehlt(new Map(tage.map(t => [t, null])))}>Alle</SmallBtn>
+                  <SmallBtn onClick={() => setAusgewaehlt(new Map())}>Keine</SmallBtn>
                 </div>
               </div>
               <Kalender tage={tage} ausgewaehlt={ausgewaehlt} onChange={setAusgewaehlt} />
