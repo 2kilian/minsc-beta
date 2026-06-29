@@ -86,37 +86,41 @@ function wochentag(dateStr) {
 function Kalender({ tage, ausgewaehlt, onChange }) {
   const tagSet = new Set(tage);
   const [zeitSheet, setZeitSheet] = useState(null);
-  const [zeitWert, setZeitWert] = useState('');
+  const [zeitStunde, setZeitStunde] = useState(null); // null | 0-23
+  const [zeitMinute, setZeitMinute] = useState(0);    // 0 | 30
+
+  const openSheet = (dateStr) => {
+    const zeit = ausgewaehlt.get(dateStr);
+    if (zeit) {
+      const [h, m] = zeit.split(':').map(Number);
+      setZeitStunde(h);
+      setZeitMinute(m === 30 ? 30 : 0);
+    } else {
+      setZeitStunde(null);
+      setZeitMinute(0);
+    }
+    setZeitSheet(dateStr);
+  };
 
   const handleTap = (dateStr) => {
     if (!tagSet.has(dateStr)) return;
-    const hat = ausgewaehlt.has(dateStr);
-    if (!hat) {
-      // Nicht ausgewählt → Kann (ganztags)
+    if (!ausgewaehlt.has(dateStr)) {
       const next = new Map(ausgewaehlt);
       next.set(dateStr, null);
       onChange(next);
     } else {
-      const zeit = ausgewaehlt.get(dateStr);
-      if (zeit === null) {
-        // Ganztags → Uhrzeit-Sheet öffnen
-        setZeitSheet(dateStr);
-        setZeitWert('');
-      } else {
-        // Hat Uhrzeit → abwählen
-        const next = new Map(ausgewaehlt);
-        next.delete(dateStr);
-        onChange(next);
-      }
+      openSheet(dateStr);
     }
   };
 
   const zeitSpeichern = () => {
     const next = new Map(ausgewaehlt);
-    next.set(zeitSheet, zeitWert || null);
+    const zeitStr = zeitStunde !== null
+      ? `${String(zeitStunde).padStart(2, '0')}:${zeitMinute === 30 ? '30' : '00'}`
+      : null;
+    next.set(zeitSheet, zeitStr);
     onChange(next);
     setZeitSheet(null);
-    setZeitWert('');
   };
 
   const tagAbwaehlen = () => {
@@ -124,7 +128,6 @@ function Kalender({ tage, ausgewaehlt, onChange }) {
     next.delete(zeitSheet);
     onChange(next);
     setZeitSheet(null);
-    setZeitWert('');
   };
 
   const monate = {};
@@ -137,7 +140,7 @@ function Kalender({ tage, ausgewaehlt, onChange }) {
   return (
     <div>
       <div style={{ fontSize: '0.76rem', color: 'var(--muted)', marginBottom: '1rem', lineHeight: 1.5 }}>
-        1× tippen = kann · 2× tippen = ab wann? · 3× tippen = abwählen
+        1× tippen = kann · 2× tippen = Zeit / abwählen
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
@@ -205,7 +208,7 @@ function Kalender({ tage, ausgewaehlt, onChange }) {
       {/* Uhrzeit Bottom Sheet */}
       {zeitSheet && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => { setZeitSheet(null); setZeitWert(''); }}
+          <div onClick={() => setZeitSheet(null)}
             style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
           <div style={{
             position: 'relative', zIndex: 1, background: '#fff',
@@ -217,22 +220,53 @@ function Kalender({ tage, ausgewaehlt, onChange }) {
             <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 4 }}>
               {formatDatumLang(zeitSheet)}
             </div>
-            <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--text)', letterSpacing: '-0.02em', marginBottom: '1.25rem' }}>
+            <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--text)', letterSpacing: '-0.02em', marginBottom: '1rem' }}>
               Ab wann kannst du?
             </div>
-            <input type="time" value={zeitWert} onChange={e => setZeitWert(e.target.value)} autoFocus
-              style={{
-                width: '100%', padding: '0.875rem 1rem',
-                fontSize: '1.5rem', fontWeight: 600, textAlign: 'center',
-                borderRadius: 12, border: '1.5px solid var(--border)',
-                outline: 'none', letterSpacing: '0.05em', color: 'var(--text)', marginBottom: '0.625rem',
-              }}
-              onFocus={e => e.target.style.borderColor = 'var(--text)'}
-              onBlur={e => e.target.style.borderColor = 'var(--border)'}
-            />
-            <p style={{ textAlign: 'center', fontSize: '0.76rem', color: 'var(--muted)', margin: '0 0 1.25rem' }}>
-              Ohne Uhrzeit = ganztags
-            </p>
+
+            {/* Stunden-Grid 0–23 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 10 }}>
+              {Array.from({ length: 24 }, (_, h) => (
+                <button key={h} onClick={() => setZeitStunde(zeitStunde === h ? null : h)} style={{
+                  padding: '0.5rem 0', borderRadius: 8, border: 'none',
+                  background: zeitStunde === h ? 'var(--text)' : 'var(--bg)',
+                  color: zeitStunde === h ? '#fff' : 'var(--secondary)',
+                  fontWeight: zeitStunde === h ? 700 : 400,
+                  fontSize: '0.875rem', cursor: 'pointer', letterSpacing: '-0.01em',
+                  WebkitTapHighlightColor: 'transparent',
+                }}>
+                  {String(h).padStart(2, '0')}
+                </button>
+              ))}
+            </div>
+
+            {/* Minuten-Toggle */}
+            <div style={{ display: 'flex', gap: 6, marginBottom: '0.875rem' }}>
+              {[0, 30].map(m => (
+                <button key={m} onClick={() => { if (zeitStunde !== null) setZeitMinute(m); }} style={{
+                  flex: 1, padding: '0.6rem', borderRadius: 10, border: 'none',
+                  background: zeitStunde !== null && zeitMinute === m ? 'var(--text)' : 'var(--bg)',
+                  color: zeitStunde !== null && zeitMinute === m ? '#fff'
+                    : zeitStunde !== null ? 'var(--secondary)' : '#c7c7cc',
+                  fontWeight: zeitStunde !== null && zeitMinute === m ? 600 : 400,
+                  fontSize: '0.9rem', cursor: zeitStunde !== null ? 'pointer' : 'default',
+                  letterSpacing: '-0.01em', WebkitTapHighlightColor: 'transparent',
+                }}>
+                  :{m === 0 ? '00' : '30'}
+                </button>
+              ))}
+            </div>
+
+            {/* Vorschau */}
+            <div style={{
+              textAlign: 'center', fontSize: '0.8rem', color: 'var(--muted)',
+              marginBottom: '1rem', minHeight: 20,
+            }}>
+              {zeitStunde !== null
+                ? `Ab ${String(zeitStunde).padStart(2, '0')}:${zeitMinute === 30 ? '30' : '00'} Uhr`
+                : 'Ganztags – keine Uhrzeit'}
+            </div>
+
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={tagAbwaehlen} style={{
                 flex: 1, padding: '0.875rem', borderRadius: 12,
@@ -247,7 +281,9 @@ function Kalender({ tage, ausgewaehlt, onChange }) {
                 background: 'var(--text)', color: '#fff', border: 'none',
                 fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', letterSpacing: '-0.01em',
               }}>
-                {zeitWert ? `Ab ${zeitWert} Uhr` : 'Ganztags'}
+                {zeitStunde !== null
+                  ? `Ab ${String(zeitStunde).padStart(2, '0')}:${zeitMinute === 30 ? '30' : '00'} Uhr`
+                  : 'Ganztags'}
               </button>
             </div>
           </div>

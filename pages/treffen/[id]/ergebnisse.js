@@ -37,7 +37,10 @@ function KalenderHeatmap({ meeting }) {
   const heatData = {};
   for (const tag of tage) heatData[tag] = 0;
   for (const [, slots] of Object.entries(antworten)) {
-    for (const slot of slots) { if (heatData[slot] !== undefined) heatData[slot]++; }
+    for (const slot of slots) {
+      const date = slot.slice(0, 10);
+      if (heatData[date] !== undefined) heatData[date]++;
+    }
   }
   const maxCount = Math.max(...Object.values(heatData), 1);
 
@@ -119,7 +122,7 @@ function KalenderHeatmap({ meeting }) {
       </div>
 
       {hovered && heatData[hovered] > 0 && (() => {
-        const wer = Object.entries(antworten).filter(([, s]) => s.includes(hovered)).map(([n]) => n);
+        const wer = Object.entries(antworten).filter(([, s]) => s.some(slot => slot.startsWith(hovered))).map(([n]) => n);
         return (
           <div style={{
             marginTop: '1rem', background: 'var(--bg)', borderRadius: 10,
