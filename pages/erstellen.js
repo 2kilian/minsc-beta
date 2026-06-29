@@ -3,40 +3,27 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 function Fortschritt({ schritt }) {
-  const steps = ['Über dich', 'Zeitraum', 'Einladen'];
+  const labels = ['Über dich', 'Zeitraum', 'Einladen'];
+  const total = labels.length;
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '2rem' }}>
-      {steps.map((label, i) => {
-        const n = i + 1;
-        const aktiv = schritt === n;
-        const done = schritt > n;
-        return (
-          <div key={n} style={{ display: 'flex', alignItems: 'center', flex: i < steps.length - 1 ? 1 : 'none' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-              <div style={{
-                width: 8, height: 8, borderRadius: '50%',
-                background: done || aktiv ? 'var(--text)' : 'var(--border)',
-                transition: 'background 0.25s',
-              }} />
-              <span style={{
-                fontSize: '0.68rem', letterSpacing: '-0.01em',
-                color: aktiv ? 'var(--text)' : 'var(--muted)',
-                fontWeight: aktiv ? 600 : 400,
-                whiteSpace: 'nowrap',
-              }}>
-                {done ? '✓ ' : ''}{label}
-              </span>
-            </div>
-            {i < steps.length - 1 && (
-              <div style={{
-                flex: 1, height: 1, margin: '0 8px', marginBottom: 20,
-                background: done ? 'var(--text)' : 'var(--border)',
-                transition: 'background 0.3s',
-              }} />
-            )}
-          </div>
-        );
-      })}
+    <div style={{ marginBottom: '1.75rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.015em' }}>
+          {labels[schritt - 1]}
+        </span>
+        <span style={{ fontSize: '0.75rem', color: 'var(--muted)', letterSpacing: '0.01em' }}>
+          {schritt} / {total}
+        </span>
+      </div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        {labels.map((_, i) => (
+          <div key={i} style={{
+            flex: 1, height: 3, borderRadius: 3,
+            background: schritt > i ? 'var(--text)' : 'var(--border)',
+            transition: 'background 0.25s',
+          }} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -136,13 +123,13 @@ export default function Erstellen() {
     <>
       <Head><title>Verabredung erstellen – Wann können wir?</title></Head>
 
-      <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: '1.5rem 1rem 6rem' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: '1.25rem 1rem', paddingBottom: 'calc(88px + env(safe-area-inset-bottom))' }}>
         <div style={{ maxWidth: 520, margin: '0 auto' }}>
 
           <a href="/" style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             color: 'var(--muted)', fontWeight: 500, fontSize: '0.875rem',
-            marginBottom: '1.75rem', letterSpacing: '-0.01em',
+            marginBottom: '1.5rem', letterSpacing: '-0.01em',
           }}>
             ← Zurück
           </a>
@@ -268,42 +255,53 @@ export default function Erstellen() {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: 10, marginTop: '0.875rem' }}>
-            {schritt > 1 && (
-              <button onClick={() => { setFehler(''); setSchritt(s => s - 1); }}
-                style={{
-                  flex: 1, padding: '0.9rem',
-                  borderRadius: 12, border: '1.5px solid var(--border)',
-                  background: 'var(--white)', color: 'var(--text)',
-                  fontWeight: 600, fontSize: '0.975rem', cursor: 'pointer',
-                  letterSpacing: '-0.01em',
-                }}>
-                Zurück
-              </button>
-            )}
-            {schritt < 3 ? (
-              <button onClick={weiter}
-                style={{
-                  flex: 2, padding: '0.9rem', borderRadius: 12,
-                  background: 'var(--text)', color: '#fff', border: 'none',
-                  fontWeight: 600, fontSize: '0.975rem', cursor: 'pointer',
-                  letterSpacing: '-0.01em',
-                }}>
-                Weiter
-              </button>
-            ) : (
-              <button onClick={submit} disabled={laden}
-                style={{
-                  flex: 2, padding: '0.9rem', borderRadius: 12,
-                  background: 'var(--text)', color: '#fff', border: 'none',
-                  fontWeight: 600, fontSize: '0.975rem', cursor: 'pointer',
-                  opacity: laden ? 0.6 : 1, letterSpacing: '-0.01em',
-                }}>
-                {laden ? 'Erstelle …' : 'Link erstellen'}
-              </button>
-            )}
-          </div>
+        </div>
+      </div>
 
+      {/* ── Sticky Navigation ── */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+        background: 'rgba(255,255,255,0.92)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderTop: '1px solid var(--border)',
+        padding: '0.875rem 1rem',
+        paddingBottom: 'calc(0.875rem + env(safe-area-inset-bottom))',
+      }}>
+        <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', gap: 10 }}>
+          {schritt > 1 && (
+            <button onClick={() => { setFehler(''); setSchritt(s => s - 1); }}
+              style={{
+                flex: 1, padding: '0.875rem',
+                borderRadius: 12, border: '1.5px solid var(--border)',
+                background: 'var(--white)', color: 'var(--text)',
+                fontWeight: 600, fontSize: '0.975rem', cursor: 'pointer',
+                letterSpacing: '-0.01em',
+              }}>
+              Zurück
+            </button>
+          )}
+          {schritt < 3 ? (
+            <button onClick={weiter}
+              style={{
+                flex: 2, padding: '0.875rem', borderRadius: 12,
+                background: 'var(--text)', color: '#fff', border: 'none',
+                fontWeight: 600, fontSize: '0.975rem', cursor: 'pointer',
+                letterSpacing: '-0.01em',
+              }}>
+              Weiter
+            </button>
+          ) : (
+            <button onClick={submit} disabled={laden}
+              style={{
+                flex: 2, padding: '0.875rem', borderRadius: 12,
+                background: 'var(--text)', color: '#fff', border: 'none',
+                fontWeight: 600, fontSize: '0.975rem', cursor: 'pointer',
+                opacity: laden ? 0.6 : 1, letterSpacing: '-0.01em',
+              }}>
+              {laden ? 'Erstelle …' : 'Link erstellen'}
+            </button>
+          )}
         </div>
       </div>
     </>
